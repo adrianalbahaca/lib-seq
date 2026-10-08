@@ -1,0 +1,39 @@
+cabal-version: 3.0
+
+name:          edyaii-seq
+version:       0.1.0.0
+synopsis:      TAD de Secuencias (árbol binario balanceado por peso) para EDyAII
+description:
+    Implementación del TAD de Secuencias usado en la materia
+    Algoritmos y Estructuras de Datos II. Incluye la clase 'Seq', el módulo
+    'Par' (operador @|||@) y una instancia basada en árboles binarios cuyo
+    recorrido inorder es la secuencia.
+category:      Data Structures
+author:        Adrian Albahaca
+maintainer:    Adrian Albahaca
+license:       MIT-0
+license-file:  LICENSE
+build-type:    Simple
+extra-doc-files:
+    README.md
+
+library
+    hs-source-dirs:   src
+    exposed-modules:
+        Seq
+        BTreeSeq
+        Par
+    build-depends:
+        base     >= 4.14 && < 5,
+        parallel
+    default-language: Haskell2010
+    ghc-options:      -Wall
+
+test-suite spec
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Spec.hs
+    build-depends:
+        base >= 4.14 && < 5,
+        edyaii-seq
+    default-language: Haskell2010
