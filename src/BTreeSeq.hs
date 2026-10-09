@@ -12,7 +12,7 @@ module BTreeSeq where
     
     sacarPrimero :: BTree a -> BTree a
     sacarPrimero Empty = Empty
-    sacarPrimero (Node _ Empty a r) = r
+    sacarPrimero (Node _ Empty _ r) = r
     sacarPrimero (Node _ l x r) = nodeB (sacarPrimero l) x r
 
     -- Para evaluar cuándo un árbol esta desbalanceado, se hace una condición de tipo peso
@@ -38,8 +38,10 @@ module BTreeSeq where
     link l x r
         | muyGrande l r = case l of
             Node _ ll y lr -> nodeB ll y (link lr x r)
+            Empty -> error ""
         | muyGrande r l = case r of
             Node _ rl y rr -> nodeB (link l x rl) y rr
+            Empty -> error ""
         | otherwise = node l x r 
 
     -- // -- // -- // -- // --
@@ -56,7 +58,7 @@ module BTreeSeq where
 
     nthT :: BTree a -> Int -> a
     nthT Empty _ = error "Seq: índice fuera de rango"
-    nthT (Node s l x r) i
+    nthT (Node _ l x r) i
         | i < k = nthT l i
         | i == k = x
         | otherwise = nthT r (i - k - 1)
@@ -82,13 +84,13 @@ module BTreeSeq where
     
     filterT :: (a -> Bool) -> BTree a -> BTree a
     filterT _ Empty = Empty
-    filterT pred (Node s l x r)
-        | (pred x) = node fl x fr
+    filterT p (Node _ l x r)
+        | (p x) = node fl x fr
         | (lengthT fr == 0) = fl
         | otherwise =
             let a = nthT fr 0
             in nodeB fl a (sacarPrimero fr)
-        where (fl, fr) = (filterT pred l) ||| (filterT pred r)
+        where (fl, fr) = (filterT p l) ||| (filterT p r)
     
     appendT :: BTree a -> BTree a -> BTree a
     appendT Empty a = a
@@ -100,7 +102,7 @@ module BTreeSeq where
     
     takeT :: BTree a -> Int -> BTree a
     takeT Empty _ = Empty 
-    takeT (Node s l x r) n
+    takeT (Node _ l x r) n
         | ll == n = l
         | ll > n = takeT l n
         | otherwise = node l x (takeT r (n - ll - 1))
@@ -126,7 +128,7 @@ module BTreeSeq where
         in appendT ll (appendT t rr)
     
     reduceT :: (a -> a -> a) -> a -> BTree a -> a
-    reduceT f n Empty = n
+    reduceT _ n Empty = n
     reduceT f n (Node _ l x r) =
         let (rl, rr) = reduceT f n l ||| reduceT f n r
         in f rl (f x rr)
@@ -159,7 +161,7 @@ module BTreeSeq where
         showtS (Node _ l x r) = NODE l (node Empty x r)
 
         showlS Empty = NIL
-        showlS t@(Node _ l x r) =
+        showlS t =
             let a = nthT t 0
             in CONS a (sacarPrimero t)
 
