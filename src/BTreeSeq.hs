@@ -13,10 +13,7 @@ module BTreeSeq where
     sacarPrimero :: BTree a -> BTree a
     sacarPrimero Empty = Empty
     sacarPrimero (Node _ Empty a r) = r
-    sacarPrimero (Node _ l x r) = nodeB (sacarPrimero l) x r 
-    
-    -- TODO: Crear una función que balancee un árbol con tamaño sin romper
-    -- invariante de recorrido inorder pedido en Seq
+    sacarPrimero (Node _ l x r) = nodeB (sacarPrimero l) x r
 
     -- Para evaluar cuándo un árbol esta desbalanceado, se hace una condición de tipo peso
     peso :: Int
