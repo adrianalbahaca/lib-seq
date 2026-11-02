@@ -39,6 +39,3 @@ ghc -threaded -rtsopts archivo.hs
 ```
 
 ## Estado y limitaciones
-- `takeS` y `dropS` no aplican balanceo automáticamente
-- `scanS` fue implementado de forma ineficiente. Está pendiente optimizarlo
-- El árbol se balancea *por tamaño*. Las funciones `fromListS` y `tabulateS` construyen el árbol casi parejo

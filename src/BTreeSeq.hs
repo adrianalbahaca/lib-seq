@@ -132,25 +132,50 @@ module BTreeSeq where
     reduceT f n (Node _ l x r) =
         let (rl, rr) = reduceT f n l ||| reduceT f n r
         in f rl (f x rr)
-    
-    scanT :: (a -> a -> a) -> a -> BTree a -> (BTree a, a)
-    scanT f b t = (tabulateT (\i -> reduceT f b (takeT t i)) (lengthT t), reduceT f b t)
-    -- ADVERTENCIA: Esta forma de aplicarlo es SUPER ineficiente y sólo funciona para funciones asociativas
 
-    -- TODO: Implementar scanT adecuadamente, tomando ventaja de la estructura del árbol
+    -- Scan óptimo usando árboles hace 2 pasadas. Una tomando su total y otra usandolo para calcular
+    -- Árbol auxiliar: cada nodo guarda el total de su subárbol
+    data TT a = TE | TN a (TT a) (TT a)
 
-    scanTNuevoAUX :: (a -> a -> a) -> a -> BTree a -> (BTree a, a)
-    scanTNuevoAUX _ e Empty = (emptyT, e)
-    scanTNuevoAUX f e (Node _ l x r) =
-        let ((l', a), (r', b)) = scanTNuevoAUX f e l ||| scanTNuevoAUX f e r
-            calc = f a (f x b)
-            in (appendT l' (appendT (singletonT calc) r'), calc)
+    -- Total de un nodo, a partir de x y los totales de sus hijos
+    nodoTot :: (a -> a -> a) -> a -> TT a -> TT a -> a
+    nodoTot _ x TE TE = x
+    nodoTot f x (TN a _ _) TE = f a x
+    nodoTot f x TE (TN b _ _) = f x b
+    nodoTot f x (TN a _ _) (TN b _ _) = f a (f x b)
 
+    -- PASADA 1 (abajo -> arriba): total de cada subárbol
+    totales :: (a -> a -> a) -> BTree a -> TT a
+    totales _ Empty = TE
+    totales f (Node _ l x r) =
+        let (tl, tr) = totales f l ||| totales f r
+        in TN (nodoTot f x tl tr) tl tr
+
+    -- PASADA 2 (arriba -> abajo): reparte las semillas
+    -- e = "lo que hay antes de este subárbol"
+    scanAux :: (a -> a -> a) -> a -> BTree a -> TT a -> BTree a
+    scanAux _ _ Empty _ = emptyT
+    scanAux f e (Node _ l x r) (TN _ ttl ttr) =
+        let acum = case ttl of
+                TE       -> e
+                TN t _ _ -> f e t
+            (l', r') = scanAux f e l ttl  |||  scanAux f (f acum x) r ttr
+            medio    = acum
+        in node l' medio r'
+
+    -- Función principal
     scanTNuevo :: (a -> a -> a) -> a -> BTree a -> (BTree a, a)
     scanTNuevo f e t =
-        let (s, a) = scanTNuevoAUX f e t
-        in (appendT (singletonT e) s, a)
+        let tt = totales f t
+            s  = scanAux f e t tt
+            total = case tt of
+                    TE        -> e
+                    TN t0 _ _ -> f e t0
+        in (s, total)
 
+    -- El Scan se especifica para funciones asociativas como sigue
+    -- scanT f b t = (tabulateT (\i -> reduceT f b (takeT t i)) (lengthT t), reduceT f b t)
+    -- ADVERTENCIA: Esta forma de aplicarlo es SUPER ineficiente y sólo funciona para funciones asociativas
 
     fromListT :: [a] -> BTree a
     fromListT [] = Empty
