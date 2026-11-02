@@ -135,9 +135,22 @@ module BTreeSeq where
     
     scanT :: (a -> a -> a) -> a -> BTree a -> (BTree a, a)
     scanT f b t = (tabulateT (\i -> reduceT f b (takeT t i)) (lengthT t), reduceT f b t)
-    -- ADVERTENCIA: Esta forma de aplicarlo es SUPER ineficiente
+    -- ADVERTENCIA: Esta forma de aplicarlo es SUPER ineficiente y sólo funciona para funciones asociativas
 
     -- TODO: Implementar scanT adecuadamente, tomando ventaja de la estructura del árbol
+
+    scanTNuevoAUX :: (a -> a -> a) -> a -> BTree a -> (BTree a, a)
+    scanTNuevoAUX _ e Empty = (emptyT, e)
+    scanTNuevoAUX f e (Node _ l x r) =
+        let ((l', a), (r', b)) = scanTNuevoAUX f e l ||| scanTNuevoAUX f e r
+            calc = f a (f x b)
+            in (appendT l' (appendT (singletonT calc) r'), calc)
+
+    scanTNuevo :: (a -> a -> a) -> a -> BTree a -> (BTree a, a)
+    scanTNuevo f e t =
+        let (s, a) = scanTNuevoAUX f e t
+        in (appendT (singletonT e) s, a)
+
 
     fromListT :: [a] -> BTree a
     fromListT [] = Empty
@@ -169,7 +182,7 @@ module BTreeSeq where
 
         joinS = joinT
         reduceS = reduceT
-        scanS = scanT
+        scanS = scanTNuevo
         fromListS = fromListT
 
 
