@@ -137,6 +137,8 @@ module BTreeSeq where
     scanT f b t = (tabulateT (\i -> reduceT f b (takeT t i)) (lengthT t), reduceT f b t)
     -- ADVERTENCIA: Esta forma de aplicarlo es SUPER ineficiente
 
+    -- TODO: Implementar scanT adecuadamente, tomando ventaja de la estructura del árbol
+
     fromListT :: [a] -> BTree a
     fromListT [] = Empty
     fromListT (x:xs) = appendT (singletonT x) (fromListT xs)
